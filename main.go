@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -10,11 +11,21 @@ import (
 
 func main() {
 	targets := map[string]*url.URL{
-		"ns1": parseURL("http://localhost:5001"),
-		"ns2": parseURL("http://localhost:5002"),
+		"ns1": parseURL("http://host.docker.internal:5001"),
+		"ns2": parseURL("http://host.docker.internal:5002"),
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			// Display a custom message when root path is accessed
+			fmt.Fprintf(w, "Welcome to the Proxy Server!\n")
+			fmt.Fprintf(w, "Available endpoints:\n")
+			for target := range targets {
+				fmt.Fprintf(w, "/%s\n", target)
+			}
+			return
+		}
+
 		segments := strings.SplitN(r.URL.Path, "/", 3)
 		if len(segments) < 2 {
 			http.NotFound(w, r)
