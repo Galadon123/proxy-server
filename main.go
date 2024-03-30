@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -9,53 +8,53 @@ import (
 	"strings"
 )
 
+
 func main() {
-	targets := map[string]*url.URL{
-		"ns1": parseURL("http://host.docker.internal:5001"),
-		"ns2": parseURL("http://host.docker.internal:5002"),
+
+	targets := map[string]string{
+		"server1": "http://host.docker.internal:5001",
+		"server2": "http://host.docker.internal:5002",
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			// Display a custom message when root path is accessed
-			fmt.Fprintf(w, "Welcome to the Proxy Server!\n")
-			fmt.Fprintf(w, "Available endpoints:\n")
-			for target := range targets {
-				fmt.Fprintf(w, "/%s\n", target)
+
+		splitPaths := strings.SplitN(r.URL.Path, "/", 3)
+		namespace := splitPaths[1];
+		target := targets[namespace]
+
+		remote, err := url.Parse(target)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		proxy := httputil.NewSingleHostReverseProxy(remote)
+		director := proxy.Director
+		proxy.Director = func(req *http.Request) {
+			director(req)
+			log.Println(req.URL.Path)
+
+			splitPath := strings.SplitN(req.URL.Path, "/", 3)
+			log.Println(splitPath)
+			if len(splitPath) > 2 {
+				req.URL.Path = "/" + splitPath[2]
+			} else {
+				req.URL.Path = "/"
 			}
-			return
+
+			req.Header.Set("Host", req.Host)
+			req.Header.Set("X-Forwarded-Host", req.Host)
+			req.Header.Set("X-Forwarded-For", req.RemoteAddr)
+			req.Header.Set("X-Forwarded-Proto", req.URL.Scheme)
+			req.Header.Set("X-Real-IP", req.RemoteAddr)
 		}
 
-		segments := strings.SplitN(r.URL.Path, "/", 3)
-		if len(segments) < 2 {
-			http.NotFound(w, r)
-			return
-		}
-
-		targetURL, ok := targets[segments[1]]
-		if !ok {
-			http.NotFound(w, r)
-			return
-		}
-
-		proxy := httputil.NewSingleHostReverseProxy(targetURL)
+		r.URL.Host = remote.Host
+		r.URL.Scheme = remote.Scheme
 		proxy.ServeHTTP(w, r)
 	})
 
-	// Log that the server is running
-	log.Println("Server is running on port 3000...")
-
-	// Start the server
-	err := http.ListenAndServe(":3000", nil)
-	if err != nil {
-		log.Fatalf("Error starting server: %s", err)
-	}
-}
-
-func parseURL(rawURL string) *url.URL {
-	parsedURL, err := url.Parse(rawURL)
+	err := http.ListenAndServe(":8000", nil)
 	if err != nil {
 		panic(err)
 	}
-	return parsedURL
 }
