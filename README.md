@@ -1,6 +1,6 @@
 ### 1. Pull the docker image for proxy-server
 ```bash
-docker pull fazlulkarim105925/reverse-proxy-server
+docker pull fazlulkarim105925/codeserver:v1.0
 ```
 ### 2. Pull the docker images for codeservers :node
 ```bash
