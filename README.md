@@ -1,6 +1,24 @@
-### 1. Run docker images:
+### 1. Pull the docker image for proxy-server
 ```bash
-docker run -p 3000:3000 revp
-docker run -p 5001:5001 backend1
-docker run -p 5002:5002 backend2
+docker pull fazlulkarim105925/reverse-proxy-server
+```
+### 2. Pull the docker images for codeservers :node
+```bash
+docker pull poridhi/codeserver-node:v1.1
+```
+### 3. Pull the docker images for codeservers :python
+```bash
+docker pull poridhi/codeserver-python:v1.2
+```
+### 4.Run the docker images for codeservers: node
+```bash
+docker run -it -p 5001:8080 poridhi/codeserver-node:v1.1
+```
+### 5.Run the docker images for codeservers: python
+```bash
+docker run -p 5002:8080 poridhi/codeserver-python:v1.2
+```
+### 6.Run the docker image of proxy-server
+```bash
+docker run -p 8000:8000 revp
 ```
