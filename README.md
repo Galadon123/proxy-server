@@ -20,5 +20,5 @@ docker run -p 5002:8080 poridhi/codeserver-python:v1.2
 ```
 ### 6.Run the docker image of proxy-server
 ```bash
-docker run -p 8000:8000 revp
+docker run -p 8000:8000 fazlulkarim105925/codeserver:v1.0
 ```
